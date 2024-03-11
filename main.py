@@ -7,6 +7,10 @@ import os
 
 from models import create_tables, Publisher, Book, Shop, Stock, Sale
 
+os.environ['PASSWORD'] = '1234'
+os.environ['NAMEBASE'] = 'mybase'
+os.environ['LOGIN'] = 'postgres'
+
 PASSWORD = os.getenv('PASSWORD')
 NAMEBASE = os.getenv('NAMEBASE')
 LOGIN = os.getenv('LOGIN')
@@ -32,17 +36,17 @@ with open("fixtures/fixtures.json", 'r', encoding='utf-8') as f:
         data.append(Publisher(id=v["id"], name=v["name"]))
 
     for v in books:
-        data.append(Book(id=v["id"], title=v["title"], publisher_id=v["publisher_id"]))
+        data.append(Book(id=v["id"], title=v["title"], id_publisher=v["id_publisher"]))
 
     for v in shops:
         data.append(Shop(id=v["id"], name=v["name"]))
 
     for v in stocks:
-        data.append(Stock(id=v["id"], book_id=v["book_id"], shop_id=v["shop_id"], count=v["count"]))
+        data.append(Stock(id=v["id"], id_book=v["id_book"], id_shop=v["id_shop"], count=v["count"]))
 
     for v in sales:
         data.append(Sale(id=v["id"], price=v["price"], date_sale=v["date_sale"],
-                         stock_id=v["stock_id"], count=v["count"]))
+                         id_stock=v["id_stock"], count=v["count"]))
 
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -50,14 +54,26 @@ session = Session()
 session.add_all(data)
 session.commit()
 
-#code_publisher = input("Code publisher: ")
-for c in session.query(Stock, Book, Shop, Sale)\
-        .filter(Stock.book_id == Book.id)\
-        .filter(Shop.id == Stock.shop_id)\
-        .filter(Sale.stock_id == Stock.id)\
-        .filter(Book.publisher_id == 1).all():
-      print(f'{c[1]} | {c[2]} | {c[3]}')
+
+def get_shops(shop):
+    query = session.query(Book.title, Shop.name, Sale.price, Sale.date_sale)\
+            .select_from(Shop)\
+            .join(Stock)\
+            .join(Book) \
+            .join(Publisher) \
+            .join(Sale)
+
+    if shop.isdigit():
+        result = query.filter(Shop.id == shop).all()
+    else:
+        result = query.filter(Shop.name == shop).all()
+
+    for c in result:
+        print(f'{c[0]: <40} | {c[1]: <10} | {c[2]: <8} | {c[3].strftime("%d-%m-%Y")}')
+
+    session.close()
 
 
-session.close()
-
+if __name__ == '__main__':
+    shop = input('Магазин: ')
+    get_shops(shop)

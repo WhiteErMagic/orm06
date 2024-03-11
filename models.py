@@ -18,13 +18,10 @@ class Book(Base):
 
     id = sq.Column(sq.Integer, primary_key=True)
     title = sq.Column(sq.String(length=40), unique=True)
-    publisher_id = sq.Column(sq.Integer, sq.ForeignKey('publisher.id'), nullable=False)
+    id_publisher = sq.Column(sq.Integer, sq.ForeignKey('publisher.id'), nullable=False)
 
-    publishers = relationship(Publisher, back_populates='books')
+    publishers = relationship('Publisher', back_populates='books')
     stocks = relationship('Stock', back_populates='books')
-
-    def __str__(self):
-        return self.title
 
 
 class Shop(Base):
@@ -35,15 +32,12 @@ class Shop(Base):
 
     stocks = relationship('Stock', back_populates='shops')
 
-    def __str__(self):
-        return self.name
-
 class Stock(Base):
     __tablename__ = 'stock'
 
     id = sq.Column(sq.Integer, primary_key=True)
-    book_id = sq.Column(sq.Integer, sq.ForeignKey('book.id'), nullable=False)
-    shop_id = sq.Column(sq.Integer, sq.ForeignKey('shop.id'), nullable=False)
+    id_book = sq.Column(sq.Integer, sq.ForeignKey('book.id'), nullable=False)
+    id_shop = sq.Column(sq.Integer, sq.ForeignKey('shop.id'), nullable=False)
     count = sq.Column(sq.Integer)
 
     books = relationship('Book', back_populates='stocks')
@@ -57,13 +51,10 @@ class Sale(Base):
     id = sq.Column(sq.Integer, primary_key=True)
     price = sq.Column(sq.Numeric(15,2))
     date_sale = sq.Column(sq.Date)
-    stock_id = sq.Column(sq.Integer, sq.ForeignKey('stock.id'), nullable=False)
+    id_stock = sq.Column(sq.Integer, sq.ForeignKey('stock.id'), nullable=False)
     count = sq.Column(sq.Integer)
 
     stocks = relationship('Stock', back_populates='sales')
-
-    def __str__(self):
-        return str(self.price) + " | " + str(self.date_sale)
 
 
 def create_tables(engine):
